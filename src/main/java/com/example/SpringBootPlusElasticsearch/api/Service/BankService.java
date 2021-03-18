@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+    Each function in this class is redirected to its Dao class which
+    will handle required database operations.
+*/
 @Service
 public class BankService {
 

@@ -16,6 +16,12 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ All the query operations, related to "bank" Index, are performed in this class and
+ All the related model classes, that are used in this class, can be found inside Model Package.
+
+ Path: "com.example.SpringBootPlusElasticsearch.Models"
+ **/
 @Component
 public class BankDao {
 
@@ -28,7 +34,9 @@ public class BankDao {
         this.elasticsearchRestTemplate = elasticsearchRestTemplate;
         this.bankRepository = bankRepository;
     }
+    /**
 
+     **/
     public List<Bank> getAllBankAcc()
     {
         List<Bank> accList = new ArrayList<>();

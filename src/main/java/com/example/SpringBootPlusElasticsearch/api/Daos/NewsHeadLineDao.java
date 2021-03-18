@@ -11,6 +11,13 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ All the query operations, related to "news_headline" Index, are performed in this class and
+ All the related model classes, that are used in this class, can be found inside Model Package.
+
+ Path: "com.example.SpringBootPlusElasticsearch.Models"
+ **/
+
 @Component
 public class NewsHeadLineDao {
 

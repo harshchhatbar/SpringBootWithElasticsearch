@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/*
+    Methods from this class will accept http request prefix by "/bank".
+    And redirect it to appropriate controller class.
+*/
 @RestController
 @RequestMapping("/movies")
 public class MovieController {
