@@ -17,10 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- All the query operations, related to "bank" Index, are performed in this class and
- All the related model classes, that are used in this class, can be found inside Model Package.
-
- Path: "com.example.SpringBootPlusElasticsearch.Models"
+ * All the query operations, related to "bank" Index, are performed in this class and
+ * All the related model classes, that are used in this class, can be found inside Model Package.
+ * <p>
+ * Path: "com.example.SpringBootPlusElasticsearch.Models"
  **/
 @Component
 public class BankDao {
@@ -29,24 +29,22 @@ public class BankDao {
     private BankRepository bankRepository;
 
     @Autowired
-    public BankDao(ElasticsearchOperations elasticsearchRestTemplate, BankRepository bankRepository)
-    {
+    public BankDao(ElasticsearchOperations elasticsearchRestTemplate, BankRepository bankRepository) {
         this.elasticsearchRestTemplate = elasticsearchRestTemplate;
         this.bankRepository = bankRepository;
     }
-    /**
 
+    /**
+     *
      **/
-    public List<Bank> getAllBankAcc()
-    {
+    public List<Bank> getAllBankAcc() {
         List<Bank> accList = new ArrayList<>();
         Iterable<Bank> ItrAcc = bankRepository.findAll();
         ItrAcc.forEach(accList::add);
         return accList;
     }
 
-    public SearchHits<Bank> getAllByFirstName(String name)
-    {
+    public SearchHits<Bank> getAllByFirstName(String name) {
         Criteria criteria = new Criteria("firstname").is(name);
         Query query = new CriteriaQuery(criteria);
         return elasticsearchRestTemplate.search(query, Bank.class);
@@ -55,7 +53,7 @@ public class BankDao {
     public SearchHits<Bank> getAllByCity(String name) {
         Criteria criteria = new Criteria("city").is(name);
         Query query = new CriteriaQuery(criteria);
-        return elasticsearchRestTemplate.search(query,Bank.class);
+        return elasticsearchRestTemplate.search(query, Bank.class);
     }
 
     public SearchHits<Bank> getAllByState(String name) {
@@ -65,14 +63,14 @@ public class BankDao {
 
         // Trying to write using Boolean query (Compound query)
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termQuery("state.keyword",name));
+                .filter(QueryBuilders.termQuery("state.keyword", name));
 
         Query query1 = new NativeSearchQuery(boolQueryBuilder);
         //for "String" type fields, Filter/Aggregation works on only keyword field (Not text field)
         BoolQueryBuilder TrialboolQueryBuilder = QueryBuilders.boolQuery()
                 .should(QueryBuilders.rangeQuery("age").lt(30).gt(23))
-                .should(QueryBuilders.prefixQuery("firstname","ha"))
-                .filter(QueryBuilders.termQuery("state.keyword",name));
+                .should(QueryBuilders.prefixQuery("firstname", "ha"))
+                .filter(QueryBuilders.termQuery("state.keyword", name));
 
         Query query2 = new NativeSearchQuery(TrialboolQueryBuilder);
 
