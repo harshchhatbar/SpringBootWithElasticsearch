@@ -34,7 +34,6 @@ public class NewsHeadLineDao {
     public List<NewsHeadLine> getAllDoc() {
         List<NewsHeadLine> newsDocs =  new ArrayList<>();
         Pageable pageable = Pageable.unpaged();
-        // Pageable.unpaged() made possible to show all the document.
         newsHeadLineRepository.findAll(pageable).forEach(newsDocs::add);
         return newsDocs;
     }

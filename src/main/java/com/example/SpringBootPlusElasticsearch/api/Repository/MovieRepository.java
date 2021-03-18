@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MovieRepository extends ElasticsearchRepository<Movies,String> {
+    // will implement some methods
 }

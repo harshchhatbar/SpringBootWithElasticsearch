@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NewsHeadLineRepository extends ElasticsearchRepository<NewsHeadLine, String> {
-    // will implement some repositories...
+    // will implement some methods..
 }

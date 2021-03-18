@@ -47,16 +47,25 @@ public class MovieDao {
         this.restHighLevelClient = restHighLevelClient;
     }
 
+    /*
+        Get all the documents of movies.
+    */
     public List<Movies> getAllMovies() {
         List<Movies> allMovieList = new ArrayList<>();
         movieRepository.findAll(Pageable.unpaged()).forEach(allMovieList::add);
         return allMovieList;
     }
 
+    /*
+         Insert movie into "movie" index.
+    */
     public Movies insertMovie(Movies moviesObj) {
         return movieRepository.save(moviesObj);
     }
 
+    /*
+        Delete movie from index.
+    */
     public String deleteData(String docId) {
         Movies moviesObj = new Movies();
         moviesObj.setId(docId);
@@ -66,10 +75,10 @@ public class MovieDao {
         return findMovie;
     }
 
-    /**
+    /*
         All of Cast member given in cast array
         must be in movies...
-     **/
+     */
     public SearchHits<Movies> getMoviesByCastMust(String... cast) {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for(String itr:cast){
@@ -86,12 +95,11 @@ public class MovieDao {
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
         Applying bool compound query on cast field.
         And get all the movies which matches at least
         "minMatch" number of cast-members.
-    **/
-
+    */
     public SearchHits<Movies> getMoviesByCastShould(int minMatch, String[] cast) {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
 
@@ -143,9 +151,9 @@ public class MovieDao {
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
         Full-text-search query using match on "fullplot" field
-    **/
+    */
     public SearchHits<Movies> getMoviesByFullPlot(String plotData) {
 
         /* Equivalent elasticsearch query:
@@ -189,11 +197,10 @@ public class MovieDao {
         return null;
     }
 
-    /**
+    /*
             Below code is equivalent to what we can we with this
             endpoint "GET movies/_analyze".
-    **/
-
+    */
     public List<AnalyzeResponse.AnalyzeToken> TrialAnalyzer(String AnalyzerType, String... textToAnalyze)
     {
         // All the Token filters (and Char_filers also) defined here anyone(any analyzer) can use it.
@@ -280,11 +287,11 @@ public class MovieDao {
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
         Find all the movies of director (some variation of given directorName
          will be considered for query because of Fuzziness).
          Then sort document result according to their IMDB rating.
-    **/
+    */
 
     public SearchHits<Movies> getMoviesOfDirectors(String directorName)
     {
@@ -297,10 +304,10 @@ public class MovieDao {
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
            Find all Movies in which given castName exists
            as part of "cast" Array field.
-    **/
+    */
     public SearchHits<Movies> getMoviesByCastExact(String castName) {
 
             /* Equivalent elasticsearch query:
@@ -325,17 +332,19 @@ public class MovieDao {
              *           }
              *       }
              * } */
+
             Criteria criteria2 = new Criteria("cast").in(castName);
             Query query = new CriteriaQuery(criteria);
 
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
             Overloaded the previous method.
             Main goal of writing this function is to get an idea about how to project specific
             fields in elasticsearch.
-    **/
+    */
+
     public org.elasticsearch.search.SearchHits getMoviesByCastExact(String castName, String... ListOfFields)
     {
         // How one can project specific fields in query.
@@ -361,10 +370,10 @@ public class MovieDao {
         return null;
     }
 
-    /**
+    /*
            Find all relevant Movie list using "MatchBoolPrefix" on Plot field
            (can be applied to FullPlot field)
-    **/
+    */
     public SearchHits<Movies> getMoviesByPlot(String movieDescription) {
 
             /*  query for "Avenger save Uni"
@@ -408,11 +417,11 @@ public class MovieDao {
             return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
            Find all relevant Movies using "MatchPhrasePrefix" on Plot field
            using given movieDescription.
            (can be applied to FullPlot field)
-    **/
+    */
     public SearchHits<Movies> getMoviesByPlot_2(String movieDescription) {
 
             /*  query for "Avenger Saves Uni"
@@ -446,10 +455,10 @@ public class MovieDao {
         return elasticsearchOperations.search(query, Movies.class);
     }
 
-    /**
+    /*
             Find Relevant movies using Multi-Match Query
             on Plot and FullPlot fields using different types.
-    **/
+    */
     public SearchHits<Movies> getMoviesByPlot_3(String PlotData)
     {
         // To get all the words in string which are space separated.
@@ -582,9 +591,9 @@ public class MovieDao {
 
     // Some other full-text search queries are remaining.
 
-    /**
+    /*
         Top-30 Directors on basis of Total number of awards.
-     **/
+     */
     public Aggregations getDirectorsMovieMetric(String... ListOfFields)
     {
         SumAggregationBuilder MaxSubAgg = new SumAggregationBuilder("max-awards-agg")
@@ -613,12 +622,11 @@ public class MovieDao {
         return null;
     }
 
-    /**
+    /*
            Creating bucket by directors then
                 for each one director creating bucket by movie language then
                     for each movie language finding one Metric-Avg Imdb Rating.
-    **/
-
+    */
     public Aggregations getLanguageBasedMetric_1()
     {
         AvgAggregationBuilder AvgSubAgg = new AvgAggregationBuilder("sub-max-rating-agg")

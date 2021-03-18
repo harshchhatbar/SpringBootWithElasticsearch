@@ -34,9 +34,9 @@ public class BankDao {
         this.bankRepository = bankRepository;
     }
 
-    /**
-     *
-     **/
+    /*
+        Return all document from bank index.
+     */
     public List<Bank> getAllBankAcc() {
         List<Bank> accList = new ArrayList<>();
         Iterable<Bank> ItrAcc = bankRepository.findAll();
@@ -44,28 +44,34 @@ public class BankDao {
         return accList;
     }
 
+    /*
+        Get bank accounts of all the person whose
+        FirstName is "name"
+    */
     public SearchHits<Bank> getAllByFirstName(String name) {
         Criteria criteria = new Criteria("firstname").is(name);
         Query query = new CriteriaQuery(criteria);
         return elasticsearchRestTemplate.search(query, Bank.class);
     }
 
+    /*
+        Get bank accounts of all the person who is
+        living in given city.
+    */
     public SearchHits<Bank> getAllByCity(String name) {
         Criteria criteria = new Criteria("city").is(name);
         Query query = new CriteriaQuery(criteria);
         return elasticsearchRestTemplate.search(query, Bank.class);
     }
 
+    /*
+         Get bank accounts of all the person,
+            who is living in given state.
+            SHOULD have "ha" prefix in FirstName
+            SHOULD have age between 30 and 23.
+    */
     public SearchHits<Bank> getAllByState(String name) {
 
-        Criteria criteria = new Criteria("state").is(name);
-        Query query = new CriteriaQuery(criteria);
-
-        // Trying to write using Boolean query (Compound query)
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termQuery("state.keyword", name));
-
-        Query query1 = new NativeSearchQuery(boolQueryBuilder);
         //for "String" type fields, Filter/Aggregation works on only keyword field (Not text field)
         BoolQueryBuilder TrialboolQueryBuilder = QueryBuilders.boolQuery()
                 .should(QueryBuilders.rangeQuery("age").lt(30).gt(23))
@@ -74,7 +80,7 @@ public class BankDao {
 
         Query query2 = new NativeSearchQuery(TrialboolQueryBuilder);
 
-        return elasticsearchRestTemplate.search(query1, Bank.class);
+        return elasticsearchRestTemplate.search(query2, Bank.class);
     }
 
 }
