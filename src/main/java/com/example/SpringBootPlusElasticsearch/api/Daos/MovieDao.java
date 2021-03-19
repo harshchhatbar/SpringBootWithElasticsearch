@@ -198,8 +198,8 @@ public class MovieDao {
     }
 
     /*
-            Below code is equivalent to what we can we with this
-            endpoint "GET movies/_analyze".
+            Below code is equivalent to what we can do with below endpoint
+            "GET movies/_analyze".
     */
     public List<AnalyzeResponse.AnalyzeToken> TrialAnalyzer(String AnalyzerType, String... textToAnalyze)
     {
@@ -433,7 +433,7 @@ public class MovieDao {
                 Defaults to 0. Transposed terms have a slop of 2.
             */
             /*
-                In contras to MatchBoolPrefixQuery, Order of terms are not maintained
+                In MatchBoolPrefixQuery, Order of terms are not maintained
                 and last word will be queried as prefix: "Uni".
             */
 
