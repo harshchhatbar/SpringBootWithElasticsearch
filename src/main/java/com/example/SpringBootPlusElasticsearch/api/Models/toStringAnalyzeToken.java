@@ -3,17 +3,13 @@ package com.example.SpringBootPlusElasticsearch.api.Models;
 import org.elasticsearch.client.indices.AnalyzeResponse;
 import org.springframework.data.annotation.Persistent;
 
+import java.io.Serializable;
 import java.util.Map;
-
-// In order to pass this object as serialize object(like Json), we have to use this annotation
-// And MAIN IMPORTANT THING is whenever we are converting our object into serializable it will always
-// access our fields through getter method and name will be whatever after "get" in getter method
 
 // e.g Method in Java is --> "<returnType> get<Name>"
 // Output will be,
 // <Name>: <Value> (which is return from getter method)
-@Persistent
-public class toStringAnalyzeToken {
+public class toStringAnalyzeToken implements Serializable {
     private AnalyzeResponse.AnalyzeToken TokenObj;
     public toStringAnalyzeToken(AnalyzeResponse.AnalyzeToken TokenObj) {
         this.TokenObj = TokenObj;
