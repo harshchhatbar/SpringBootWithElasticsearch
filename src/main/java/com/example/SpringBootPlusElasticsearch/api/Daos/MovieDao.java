@@ -655,9 +655,6 @@ public class MovieDao {
                 .size(20)
                 .subAggregation(TermSubAgg);
 
-
-
-
         SearchRequest searchRequest = new SearchRequest("movies");
         /*
               Unlike query filter, PostFilter will not affect aggregation.
