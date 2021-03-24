@@ -47,6 +47,7 @@ import static org.springframework.data.domain.Sort.Order.desc;
     Path: "com.example.SpringBootPlusElasticsearch.Models"
 **/
 
+@Component
 public class MovieDao {
     private final ElasticsearchOperations elasticsearchOperations;
     private final MovieRepository movieRepository;
