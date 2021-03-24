@@ -131,4 +131,12 @@ public class MovieController {
     {
         return movieService.getLanguageBasedMetric_1();
     }
+
+    @GetMapping("/CreateIndexTemplate")
+    public String CreateIndexTemplate(@RequestBody String TemplateName){
+        if(movieService.CreateIndexTemplate(TemplateName))
+            return "Completed";
+        else
+            return "Not Completed. Try Again";
+    }
 }

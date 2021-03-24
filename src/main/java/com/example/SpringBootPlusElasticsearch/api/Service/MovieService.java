@@ -97,4 +97,8 @@ public class MovieService {
     {
         return movieDao.getLanguageBasedMetric_1();
     }
+    public boolean CreateIndexTemplate(String NameOfTemplate){
+        return movieDao.CreateIndexTemplate(NameOfTemplate);
+    }
+
 }

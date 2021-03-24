@@ -3,13 +3,20 @@ package com.example.SpringBootPlusElasticsearch.api.Daos;
 import com.example.SpringBootPlusElasticsearch.api.Models.EdgeNgramTokenizer;
 import com.example.SpringBootPlusElasticsearch.api.Models.Movies;
 import com.example.SpringBootPlusElasticsearch.api.Repository.MovieRepository;
+import net.minidev.json.JSONObject;
+import net.minidev.json.parser.ParseException;
+import net.minidev.json.parser.JSONParser;
+import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.AnalyzeRequest;
 import org.elasticsearch.client.indices.AnalyzeResponse;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.BucketOrder;
@@ -17,14 +24,20 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.stereotype.Component;
+
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.*;
+
+import static net.minidev.json.parser.JSONParser.DEFAULT_PERMISSIVE_MODE;
 import static org.springframework.data.domain.Sort.Order.desc;
 
 /**
@@ -33,7 +46,7 @@ import static org.springframework.data.domain.Sort.Order.desc;
 
     Path: "com.example.SpringBootPlusElasticsearch.Models"
 **/
-@Component
+
 public class MovieDao {
     private final ElasticsearchOperations elasticsearchOperations;
     private final MovieRepository movieRepository;
@@ -641,6 +654,9 @@ public class MovieDao {
                 .size(20)
                 .subAggregation(TermSubAgg);
 
+
+
+
         SearchRequest searchRequest = new SearchRequest("movies");
         /*
               Unlike query filter, PostFilter will not affect aggregation.
@@ -663,6 +679,56 @@ public class MovieDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+       /*
+        Creating index template and using it.
+    */
+
+    private String ConvertJsonToString(String fileName){
+        /*DEFAULT_PERMISSIVE_MODE*/
+        JSONParser parser = new JSONParser(DEFAULT_PERMISSIVE_MODE);
+        try (Reader reader = new FileReader(fileName)) {
+            JSONObject jsonObject = (JSONObject) parser.parse(reader);
+            return jsonObject.toJSONString();
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /*
+        Creating custom index template for movies index.
+    */
+    public boolean CreateIndexTemplate(String NameOfTemplate){
+        PutIndexTemplateRequest TemplateRequest = new PutIndexTemplateRequest(NameOfTemplate);
+        String IndexTemplateInString = ConvertJsonToString("MoviesIndexTemplate.json");
+        TemplateRequest.source(IndexTemplateInString, XContentType.JSON);
+//                .create(true);  // Forcing to create template even if there is template of same name.
+        try{
+            AcknowledgedResponse putTemplateResponse = restHighLevelClient.indices()
+                    .putTemplate(TemplateRequest, RequestOptions.DEFAULT);
+            return putTemplateResponse.isAcknowledged();
+        }
+        catch(IOException  e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean DeleteIndexTemplate(String templateName) {
+        DeleteIndexTemplateRequest deleteRequest = new DeleteIndexTemplateRequest();
+        deleteRequest.name(templateName);
+
+        try{
+            AcknowledgedResponse deleteTemplateResponse = restHighLevelClient.indices()
+                    .deleteTemplate(deleteRequest, RequestOptions.DEFAULT);
+            return deleteTemplateResponse.isAcknowledged();
+        }
+        catch(IOException  e){
+            e.printStackTrace();
+        }
+        return false;
     }
 }
 
