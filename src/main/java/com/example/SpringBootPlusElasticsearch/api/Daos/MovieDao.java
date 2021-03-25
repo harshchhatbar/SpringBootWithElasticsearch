@@ -7,14 +7,16 @@ import net.minidev.json.JSONObject;
 import net.minidev.json.parser.ParseException;
 import net.minidev.json.parser.JSONParser;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.ingest.PutPipelineRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.AnalyzeRequest;
-import org.elasticsearch.client.indices.AnalyzeResponse;
-import org.elasticsearch.client.indices.PutIndexTemplateRequest;
+import org.elasticsearch.client.indices.*;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
@@ -24,7 +26,6 @@ import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilde
 import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.SumAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -35,6 +36,7 @@ import org.springframework.stereotype.Component;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static net.minidev.json.parser.JSONParser.DEFAULT_PERMISSIVE_MODE;
@@ -83,10 +85,8 @@ public class MovieDao {
     public String deleteData(String docId) {
         Movies moviesObj = new Movies();
         moviesObj.setId(docId);
-
-        String findMovie = elasticsearchOperations.delete(moviesObj);
         //movieRepository.deleteById(docId);
-        return findMovie;
+        return elasticsearchOperations.delete(moviesObj);
     }
 
     /*
@@ -196,13 +196,15 @@ public class MovieDao {
             List<AnalyzeResponse.AnalyzeToken> tokenList = response.getTokens();
             for(AnalyzeResponse.AnalyzeToken itr: tokenList)
                 System.out.println(itr.getTerm());
-//             System.out.println(tokenList.size());
-//             toStringAnalyzeToken is now serializable and can be used in place of AnalyeToken.
-//             List<toStringAnalyzeToken> finalTokenList = new ArrayList<>();
-//             for(AnalyzeResponse.AnalyzeToken itr:tokenList){
-//                finalTokenList.add(new toStringAnalyzeToken(itr));
-//                System.out.println(finalTokenList);
-//             }
+/*
+             System.out.println(tokenList.size());
+             toStringAnalyzeToken is now serializable and can be used in place of AnalyeToken.
+             List<toStringAnalyzeToken> finalTokenList = new ArrayList<>();
+             for(AnalyzeResponse.AnalyzeToken itr:tokenList){
+                finalTokenList.add(new toStringAnalyzeToken(itr));
+                System.out.println(finalTokenList);
+             }
+*/
             return tokenList;
         }
         catch (IOException e) {
@@ -230,17 +232,19 @@ public class MovieDao {
                         .setTokenChars(new String[]{"letter","digit"})
                         .build();
 
-        Map<String, Object> EdgeNgramTokenizer = new LinkedHashMap<>();
-        EdgeNgramTokenizer.put("type","edge_ngram");
-        EdgeNgramTokenizer.put("min_gram",3);
-        EdgeNgramTokenizer.put("max_gram",6);
-
         /*
+             Another way of configuring tokenizer or any filters.
+             Map<String, Object> EdgeNgramTokenizer = new LinkedHashMap<>();
+             EdgeNgramTokenizer.put("type","edge_ngram");
+             EdgeNgramTokenizer.put("min_gram",3);
+             EdgeNgramTokenizer.put("max_gram",6);
+             EdgeNgramTokenizer.put("token_chars",new String[]{"letter","digit"});
+
             This particularly will break the token whenever it encounters a character which
             doesn't belong to list of token_chars --> array. Helps to create(break) a big text
             into meaningful token(as well as its edge_ngram tokens).
-        */
-        EdgeNgramTokenizer.put("token_chars",new String[]{"letter","digit"});
+
+         */
 
         Map<String, Object> StopwordTokenFilter = new LinkedHashMap<>();
         StopwordTokenFilter.put("type", "stop");
@@ -362,13 +366,12 @@ public class MovieDao {
     public org.elasticsearch.search.SearchHits getMoviesByCastExact(String castName, String... ListOfFields)
     {
         // How one can project specific fields in query.
-        String[] includeFields = ListOfFields;
         String[] excludeFields = new String[] {};
 
         SearchRequest searchRequest = new SearchRequest("movies");
         SearchSourceBuilder searchSourceBuilder =  new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchPhraseQuery("cast",castName));
-        searchSourceBuilder.fetchSource(includeFields,excludeFields);
+        searchSourceBuilder.fetchSource(ListOfFields,excludeFields);
         searchRequest.source(searchSourceBuilder);
 
         try{
@@ -622,7 +625,8 @@ public class MovieDao {
         SearchRequest searchRequest = new SearchRequest("movies");
 
         SearchSourceBuilder searchSourceBuilder =  new SearchSourceBuilder()
-                    .aggregation(aggregationBuilder);
+                    .aggregation(aggregationBuilder)
+                    .fetchSource(ListOfFields, null);
 
         searchRequest.source(searchSourceBuilder);
         try{
@@ -679,10 +683,9 @@ public class MovieDao {
         return null;
     }
 
-       /*
+    /*
         Creating index template and using it.
     */
-
     private String ConvertJsonToString(String fileName){
         /*DEFAULT_PERMISSIVE_MODE*/
         JSONParser parser = new JSONParser(DEFAULT_PERMISSIVE_MODE);
@@ -728,5 +731,94 @@ public class MovieDao {
         }
         return false;
     }
+
+    public boolean CreateIndex(String indexName){
+        // Creating Index
+
+        /*
+            Index creation contains 3 parts
+            1) Settings:
+            2) Mappings:
+                There are different ways to do mappings
+                - Map<String, Object>
+                - Json  (Most Convenient way of doing mapping)
+                - XContentBuilder
+            3) Aliases
+
+            OR we can provide everything in source() in same below formats.
+                - Map<String, Object>
+                - Json  (Most Convenient way of doing mapping)
+                - XContentBuilder
+        */
+
+        CreateIndexRequest indexRequest = new CreateIndexRequest(indexName);
+        // Converting content of JSON file from Json to string object
+        String FileName = "MovieIndex.json";
+        String IndexInString = ConvertJsonToString(FileName);
+        indexRequest.source(IndexInString, XContentType.JSON);
+        try{
+            CreateIndexResponse createIndexResponse = restHighLevelClient.indices()
+                    .create(indexRequest, RequestOptions.DEFAULT);
+            return createIndexResponse.isAcknowledged();
+        }
+        catch(IOException  e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean CreatePipeline(String pipelineName, String fileName){
+        String sourcePipelineString = ConvertJsonToString(fileName);
+        PutPipelineRequest pipelineRequest = null;
+        if (sourcePipelineString != null) {
+            pipelineRequest = new PutPipelineRequest(
+                    pipelineName,
+                    new BytesArray(sourcePipelineString.getBytes(StandardCharsets.UTF_8)),
+                    XContentType.JSON
+            );
+            try{
+                AcknowledgedResponse response = restHighLevelClient.ingest()
+                        .putPipeline(pipelineRequest, RequestOptions.DEFAULT);
+                return response.isAcknowledged();
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public void simulatePipeline(String fileName){
+
+    }
+
+    public void IndexDocumentWithPipeline(String indexName,
+                                          String indexFilename,
+                                          String pipelineName){
+
+        String IndexDocsInString = ConvertJsonToString(indexFilename);
+        IndexRequest request = new IndexRequest(indexName)
+                .setPipeline(pipelineName)
+                .source(XContentType.JSON, IndexDocsInString);
+
+        /*
+            "indexFilename" is a file which has document which is supposed to add in
+            "indexName" index using "pipelineName" pipeline.
+        */
+
+        try {
+            IndexResponse response = restHighLevelClient.index(request, RequestOptions.DEFAULT);
+            /*
+                We can observe somethings in response.
+                1) Whether document is created or updated.
+                2) get ID, get name of Index.
+            */
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }
 

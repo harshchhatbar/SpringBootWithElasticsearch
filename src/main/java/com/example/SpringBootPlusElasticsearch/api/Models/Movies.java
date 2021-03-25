@@ -5,6 +5,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.util.List;
 
+
 @Document(indexName = "movies")
 public class Movies {
     @Id

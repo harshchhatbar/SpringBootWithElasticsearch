@@ -101,4 +101,21 @@ public class MovieService {
         return movieDao.CreateIndexTemplate(NameOfTemplate);
     }
 
+    public boolean DeleteIndexTemplate(String templateName){
+        return movieDao.DeleteIndexTemplate(templateName);
+    }
+
+    public boolean CreateIndex(String indexName) {
+        return movieDao.CreateIndex(indexName);
+    }
+
+    public boolean CreatePipeline(String pipelineName, String fileName){
+        return movieDao.CreatePipeline(pipelineName,fileName);
+    }
+
+    public void IndexDocumentWithPipeline(String indexName,
+                                          String indexFilename,
+                                          String pipelineName){
+        movieDao.IndexDocumentWithPipeline(indexName, indexFilename, pipelineName);
+    }
 }

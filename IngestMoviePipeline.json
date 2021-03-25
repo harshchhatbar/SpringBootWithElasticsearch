@@ -1,0 +1,11 @@
+{
+  "description": "my set of processors",
+  "processors": [
+    {
+      "convert": {
+        "field": "_source.timeStamp",
+        "value": "{{_ingest.timestamp}}"
+      }
+    }
+  ]
+}

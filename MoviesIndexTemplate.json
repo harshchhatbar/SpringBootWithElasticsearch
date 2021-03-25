@@ -1,0 +1,229 @@
+{
+  "index_patterns": [
+    "movies*"
+  ],
+  "order": 200,
+  "settings": {
+    "index": {
+      "analysis": {
+        "filter": {
+          "my-edge3-20-gram": {
+            "type": "edge_ngram",
+            "min_gram": 3,
+            "max_gram": 20
+          }
+        },
+        "tokenizer": {
+          "my-edgeNgram": {
+            "type": "edge_ngram",
+            "min_gram": 1,
+            "max_gram": 20,
+            "token_chars": [
+              "letter",
+              "digit"
+            ]
+          }
+        },
+        "analyzer": {
+          "Plot-FullPlot-analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase"
+            ],
+            "char_filer": [
+              "html_strip"
+            ]
+          },
+          "title-EdgeNgram": {
+            "type": "custom",
+            "tokenizer": "my-edgeNgram",
+            "filter": [
+              "lowercase"
+            ]
+          },
+          "auto-suggest-analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "my-edgeNgram"
+            ],
+            "char_filter": [
+              "html_strip"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "title-EdgeNgram",
+        "search_analyzer": "standard",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "plot": {
+        "type": "text",
+        "analyzer": "Plot-FullPlot-analyzer",
+        "search_analyzer": "standard"
+      },
+      "genres": {
+        "type": "keyword",
+        "index": "true"
+      },
+      "runtime": {
+        "type": "integer",
+        "index": "true"
+      },
+      "cast": {
+        "type": "text",
+        "analyzer": "whitespace",
+        "search_analyzer": "standard",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "index": "false"
+          }
+        },
+        "index": "true"
+      },
+      "num_mflix_comments": {
+        "type": "integer",
+        "index": "false"
+      },
+      "fullplot": {
+        "type": "text",
+        "analyzer": "Plot-FullPlot-analyzer",
+        "search_analyzer": "standard"
+      },
+      "countries": {
+        "type": "keyword",
+        "index": "true"
+      },
+      "directors": {
+        "type": "keyword",
+        "index": "true"
+      },
+      "rated": {
+        "type": "keyword",
+        "index": "false"
+      },
+      "year": {
+        "type": "integer",
+        "index": "false"
+      },
+      "poster": {
+        "type": "keyword",
+        "index": "false"
+      },
+      "metacritic": {
+        "type": "integer",
+        "index": "false"
+      },
+      "languages": {
+        "type": "keyword",
+        "index": "true"
+      },
+      "imdb": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "double",
+            "index": "true"
+          },
+          "votes": {
+            "type": "integer",
+            "index": "false"
+          },
+          "id": {
+            "type": "integer",
+            "index": "false"
+          }
+        }
+      },
+      "tomatoes": {
+        "type": "object",
+        "properties": {
+          "website": {
+            "type": "keyword",
+            "index": "false"
+          },
+          "boxOffice": {
+            "type": "keyword",
+            "index": "false"
+          },
+          "production": {
+            "type": "keyword",
+            "index": "true"
+          },
+          "viewer": {
+            "type": "object",
+            "properties": {
+              "rating": {
+                "type": "double",
+                "index": "true"
+              },
+              "numReviews": {
+                "type": "integer",
+                "index": "true"
+              },
+              "meter": {
+                "type": "integer",
+                "index": "false"
+              }
+            }
+          },
+          "critic": {
+            "type": "object",
+            "properties": {
+              "rating": {
+                "type": "double",
+                "index": "true"
+              },
+              "numReviews": {
+                "type": "integer",
+                "index": "true"
+              },
+              "meter": {
+                "type": "integer",
+                "index": "false"
+              }
+            }
+          },
+          "rotten": {
+            "type": "integer",
+            "index": "false"
+          },
+          "fresh": {
+            "type": "integer",
+            "index": "false"
+          }
+        }
+      },
+      "awards": {
+        "type": "object",
+        "properties": {
+          "wins": {
+            "type": "integer",
+            "index": "false"
+          },
+          "nominations": {
+            "type": "integer",
+            "index": "false"
+          },
+          "text": {
+            "type": "keyword",
+            "index": "false"
+          }
+        }
+      }
+    }
+  }
+}

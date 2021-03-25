@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/movies")
 public class MovieController {
 
-    private MovieService movieService;
+    private final MovieService movieService;
     @Autowired
     public MovieController(MovieService movieService){
         this.movieService = movieService;
@@ -132,11 +132,49 @@ public class MovieController {
         return movieService.getLanguageBasedMetric_1();
     }
 
-    @GetMapping("/CreateIndexTemplate")
+    @PutMapping("/CreateIndexTemplate")
     public String CreateIndexTemplate(@RequestBody String TemplateName){
         if(movieService.CreateIndexTemplate(TemplateName))
             return "Completed";
         else
             return "Not Completed. Try Again";
+    }
+
+    @DeleteMapping("/DeleteIndexTemplate")
+    public String DeleteIndexTemplate(@RequestBody String templateName){
+        if(movieService.DeleteIndexTemplate(templateName)){
+            return "Successfully Deleted";
+        }
+        else{
+            return "Try Again";
+        }
+    }
+
+    @PutMapping("/CreateIndex")
+    public String CreateIndex(@RequestBody String IndexName){
+        if(movieService.CreateIndex(IndexName))
+            return "Completed";
+        else
+            return "Not Completed. Try Again";
+    }
+
+    @PutMapping("/PutPipeline/{pipeName}/{fileName}")
+    public String CreatePipeline(
+            @PathVariable("pipeName") String pipelineName,
+            @PathVariable("fileName") String fileName){
+
+        if(movieService.CreatePipeline(pipelineName, fileName)){
+            return "Successfully inserted Pipeline.";
+        }
+        else{
+            return "Try again.";
+        }
+    }
+
+    @PutMapping("/IndexDocs/{indexName}/{indexFilename}/{pipelineName}")
+    public void IndexDocumentWithPipeline(@PathVariable String indexName,
+                                          @PathVariable String indexFilename,
+                                          @PathVariable String pipelineName){
+        movieService.IndexDocumentWithPipeline(indexName, indexFilename, pipelineName);
     }
 }

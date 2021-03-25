@@ -1,0 +1,76 @@
+{
+  "index_patterns": ["bank*"],
+  "order": 100,
+  "settings": {
+    "index": {
+      "analysis": {
+        "filter": {
+          "my-edgeNgram-filter": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 15
+          }
+        },
+        "analyzer": {
+          "my-standard-analyzer": {
+            "tokenizer": "standard",
+            "filter": [
+              "lowercase",
+              "my-edgeNgram-filter",
+              "asciifolding"
+            ],
+            "char_filter": [
+              "html_strip"
+            ]
+          }
+        }
+      }
+    }
+  },
+    "mappings": {
+      "properties": {
+        "acc_num": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "city": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "age": {
+          "type": "integer",
+          "index": "false"
+        },
+        "address": {
+          "type": "text",
+          "analyzer": "my-standard-analyzer",
+          "index": "true"
+        },
+        "email": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "employer": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "firstname": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "lastname": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "gender": {
+          "type": "keyword",
+          "index": "false"
+        },
+        "state": {
+          "type": "keyword",
+          "index": "true"
+        }
+      }
+    }
+}
+
